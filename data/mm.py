@@ -5,15 +5,17 @@ import os
 from PIL import Image
 import random
 import torch
-import torch.utils.data as data
+from torch.utils.data import Dataset
+from matplotlib import pyplot as plt
+
 
 def load_mnist(root):
     # Load MNIST dataset for generating training data.
     path = os.path.join(root, 'train-images-idx3-ubyte.gz')
     with gzip.open(path, 'rb') as f:
         mnist = np.frombuffer(f.read(), np.uint8, offset=16)
-        mnist = mnist.reshape(-1, 28, 28)
-    return mnist
+        mnist = mnist.reshape((-1, 28, 28))     # a.reshape(tuple)
+    return mnist        # len(mnist) ==> 60000
 
 
 def load_fixed_set(root, is_train):
@@ -25,12 +27,12 @@ def load_fixed_set(root, is_train):
     return dataset
 
 
-class MovingMNIST(data.Dataset):
+class MovingMNIST(Dataset):
     def __init__(self, root, is_train, n_frames_input, n_frames_output, num_objects,
                  transform=None):
-        '''
+        """
         param num_objects: a list of number of possible objects.
-        '''
+        """
         super(MovingMNIST, self).__init__()
 
         self.dataset = None
@@ -55,9 +57,9 @@ class MovingMNIST(data.Dataset):
         self.step_length_ = 0.1
 
     def get_random_trajectory(self, seq_length):
-        ''' Generate a random sequence of a MNIST digit '''
+        """ Generate a random sequence of a MNIST digit """
         canvas_size = self.image_size_ - self.digit_size_
-        x = random.random()
+        x = random.random()     # x ==> [0, 1)
         y = random.random()
         theta = random.random() * 2 * np.pi
         v_y = np.sin(theta)
@@ -92,9 +94,9 @@ class MovingMNIST(data.Dataset):
         return start_y, start_x
 
     def generate_moving_mnist(self, num_digits=2):
-        '''
+        """
         Get random trajectories for the digits and generate a video.
-        '''
+        """
         data = np.zeros((self.n_frames_total, self.image_size_, self.image_size_), dtype=np.float32)
         for n in range(num_digits):
             # Trajectory
@@ -156,3 +158,34 @@ class MovingMNIST(data.Dataset):
 
     def __len__(self):
         return self.length
+
+
+def main():
+    root = './'
+    mnist = load_mnist(root)
+    plt.imshow(mnist[0], cmap='gray')
+    plt.show()
+
+    train_folder = MovingMNIST(is_train=True,
+                               root=root,
+                               n_frames_input=10,
+                               n_frames_output=10,
+                               num_objects=[3])
+    idx, output, input, frozen, _ = train_folder.__getitem__(0)
+
+    n_rows, n_cols = (2, 10)
+    plt.figure(figsize=(n_cols, n_rows))
+    for i in range(n_rows * n_cols):
+        plt.subplot(n_rows, n_cols, i + 1)
+        plt.axis('off')
+        plt.title(i + 1)
+        try:
+            plt.imshow(input[i][0], cmap='gray')
+        except IndexError:
+            plt.imshow(output[i-10][0], cmap='gray')
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == '__main__':
+    main()
