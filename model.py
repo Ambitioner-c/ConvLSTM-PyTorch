@@ -4,7 +4,7 @@ import torch
 from utils import make_layers
 
 
-class activation():
+class Activation:
 
     def __init__(self, act_type, negative_slope=0.2, inplace=True):
         super().__init__()
