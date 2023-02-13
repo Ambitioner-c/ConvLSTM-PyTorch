@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
+"""
 @File    :   main.py
 @Time    :   2020/03/09
 @Author  :   jhhuang96
 @Mail    :   hjh096@126.com
 @Version :   1.0
-@Description:   
-'''
+@Description:
+"""
 
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -115,7 +115,7 @@ def train():
     if os.path.exists(os.path.join(save_dir, 'checkpoint.pth.tar')):
         # load existing model
         print('==> loading existing model')
-        model_info = torch.load(os.path.join(save_dir, 'checkpoin.pth.tar'))
+        model_info = torch.load(os.path.join(save_dir, 'checkpoint.pth.tar'))
         net.load_state_dict(model_info['state_dict'])
         optimizer = torch.optim.Adam(net.parameters())
         optimizer.load_state_dict(model_info['optimizer'])
