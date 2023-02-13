@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
+"""
 @File    :   encoder.py
 @Time    :   2020/03/09 18:47:50
 @Author  :   jhhuang96
 @Mail    :   hjh096@126.com
 @Version :   1.0
 @Description:   encoder
-'''
+"""
 
 from torch import nn
 from utils import make_layers
@@ -26,7 +26,8 @@ class Encoder(nn.Module):
             setattr(self, 'stage' + str(index), make_layers(params))
             setattr(self, 'rnn' + str(index), rnn)
 
-    def forward_by_stage(self, inputs, subnet, rnn):
+    @staticmethod
+    def forward_by_stage(inputs, subnet, rnn):
         seq_number, batch_size, input_channel, height, width = inputs.size()
         inputs = torch.reshape(inputs, (-1, input_channel, height, width))
         inputs = subnet(inputs)
@@ -47,23 +48,28 @@ class Encoder(nn.Module):
         return tuple(hidden_states)
 
 
-if __name__ == "__main__":
+def main():
     from net_params import convgru_encoder_params, convgru_decoder_params
     from data.mm import MovingMNIST
 
     encoder = Encoder(convgru_encoder_params[0],
                       convgru_encoder_params[1]).cuda()
-    trainFolder = MovingMNIST(is_train=True,
-                              root='data/',
-                              n_frames_input=10,
-                              n_frames_output=10,
-                              num_objects=[3])
-    trainLoader = torch.utils.data.DataLoader(
-        trainFolder,
+    train_folder = MovingMNIST(is_train=True,
+                               root='data/',
+                               n_frames_input=10,
+                               n_frames_output=10,
+                               num_objects=[3])
+    train_loader = torch.utils.data.DataLoader(
+        train_folder,
         batch_size=4,
         shuffle=False,
     )
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    for i, (idx, targetVar, inputVar, _, _) in enumerate(trainLoader):
+    for i, (idx, targetVar, inputVar, _, _) in enumerate(train_loader):
         inputs = inputVar.to(device)  # B,S,1,64,64
         state = encoder(inputs)
+        print(state[0].size())
+
+
+if __name__ == "__main__":
+    main()
